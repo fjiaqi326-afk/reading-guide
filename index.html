@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Why Do You Read?</title>
+<style>
+  :root { --bg:#faf7f2; --text:#2b2a28; --card:#fff; --accent:#b4532a; --muted:#6f6a63; --line:#e6dfd4; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#1d1c1a; --text:#ece8e1; --card:#292724; --accent:#e58a5c; --muted:#a39d93; --line:#3a3733; }
+  }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: Georgia, serif; background:var(--bg); color:var(--text); line-height:1.6; }
+  main { max-width: 760px; margin: 0 auto; padding: 32px 20px 64px; }
+  h1 { font-size: 2rem; margin-bottom: 4px; }
+  .sub { color: var(--muted); margin-top: 0; }
+  .goals { display:grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap:12px; margin: 24px 0; }
+  .goals button { font: inherit; padding: 16px 12px; background:var(--card); color:var(--text);
+    border:2px solid var(--line); border-radius:12px; cursor:pointer; text-align:left; }
+  .goals button:hover { border-color: var(--accent); }
+  .goals button.active { border-color: var(--accent); background: var(--accent); color:#fff; }
+  .goals .icon { font-size: 1.6rem; display:block; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:20px; margin-bottom:16px; }
+  .card h3 { margin-top:0; color: var(--accent); }
+  .card ol { padding-left: 20px; }
+  .tag { font-size:.8rem; color:var(--muted); text-transform:uppercase; letter-spacing:.05em; }
+  .tip { border-left: 4px solid var(--accent); padding-left: 12px; color: var(--muted); }
+  #timer { text-align:center; }
+  #time { font-size: 2.4rem; font-variant-numeric: tabular-nums; }
+  .timer-btn { font: inherit; padding: 8px 16px; margin: 4px; border-radius: 8px; border:1px solid var(--accent);
+    background: transparent; color: var(--accent); cursor:pointer; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Why do you read?</h1>
+  <p class="sub">Different goals need different ways of reading. Pick yours.</p>
+
+  <div class="goals" id="goals"></div>
+  <div id="result"></div>
+
+  <div class="card" id="timer">
+    <div class="tag">Reading session timer</div>
+    <div id="time">25:00</div>
+    <button class="timer-btn" id="start">Start</button>
+    <button class="timer-btn" id="reset">Reset</button>
+  </div>
+</main>
+
+<script>
+// ---- DATA: edit this part to add your own goals and methods! ----
+const goals = [
+  {
+    id: "fun", icon: "🎈", name: "For fun",
+    intro: "You want enjoyment and escape. Don't turn it into homework.",
+    methods: [
+      { name: "Free reading",
+        steps: ["Pick a book you are curious about.", "Read without taking notes.", "Stop when it stops being fun, and it's OK to quit a book."] }
+    ],
+    tip: "Reading speed and memory don't matter here. Enjoyment is the goal."
+  },
+  {
+    id: "knowledge", icon: "📘", name: "For knowledge",
+    intro: "You want to learn facts and ideas, and remember them.",
+    methods: [
+      { name: "SQ3R",
+        steps: ["Survey: skim the headings and summary first.", "Question: turn each heading into a question.", "Read: read to answer your questions.", "Recite: say the answer aloud, without looking.", "Review: revisit after 1 day, 1 week, 1 month."] },
+      { name: "Feynman summary",
+        steps: ["After a chapter, explain it in simple words as if to a child.", "Where you get stuck is what you didn't understand.", "Go back and read that part again."] }
+    ],
+    tip: "Testing yourself works better than re-reading."
+  },
+  {
+    id: "thinking", icon: "🧠", name: "For thinking",
+    intro: "You want to question the author and form your own view.",
+    methods: [
+      { name: "Analytical reading (Adler's 4 questions)",
+        steps: ["What is the book about as a whole?", "What is being said in detail, and how?", "Is it true, in whole or in part?", "What of it? What does it change for me?"] },
+      { name: "Compare two books",
+        steps: ["Read two books on the same topic.", "List where they agree and disagree.", "Write your own conclusion."] }
+    ],
+    tip: "Write in the margins. Argue with the author."
+  },
+  {
+    id: "feeling", icon: "🎨", name: "For feeling & art",
+    intro: "You want to be moved and to appreciate beauty.",
+    methods: [
+      { name: "Slow reading",
+        steps: ["Read in a quiet place, with no rush.", "Read favorite passages aloud.", "Pause when a line moves you, and notice why."] },
+      { name: "Feeling journal",
+        steps: ["After reading, write one sentence: what did I feel?", "Copy one line you loved.", "Reread it a week later."] }
+    ],
+    tip: "There is no right answer. Your reaction is the point."
+  }
+];
+// ---- END DATA ----
+
+const goalsEl = document.getElementById("goals");
+const resultEl = document.getElementById("result");
+
+function showGoal(goal) {
+  document.querySelectorAll(".goals button").forEach(b =>
+    b.classList.toggle("active", b.dataset.id === goal.id));
+  let html = `<p>${goal.intro}</p>`;
+  goal.methods.forEach(m => {
+    html += `<div class="card"><div class="tag">Method</div><h3>${m.name}</h3><ol>` +
+            m.steps.map(s => `<li>${s}</li>`).join("") + `</ol></div>`;
+  });
+  html += `<p class="tip">${goal.tip}</p>`;
+  resultEl.innerHTML = html;
+}
+
+goals.forEach(g => {
+  const b = document.createElement("button");
+  b.dataset.id = g.id;
+  b.innerHTML = `<span class="icon">${g.icon}</span>${g.name}`;
+  b.addEventListener("click", () => showGoal(g));
+  goalsEl.appendChild(b);
+});
+
+// ---- Simple timer ----
+let seconds = 25 * 60, interval = null;
+const timeEl = document.getElementById("time");
+function draw() {
+  const m = String(Math.floor(seconds / 60)).padStart(2, "0");
+  const s = String(seconds % 60).padStart(2, "0");
+  timeEl.textContent = `${m}:${s}`;
+}
+document.getElementById("start").addEventListener("click", () => {
+  if (interval) return;
+  interval = setInterval(() => {
+    seconds--; draw();
+    if (seconds <= 0) { clearInterval(interval); interval = null; alert("Time's up. Nice reading!"); }
+  }, 1000);
+});
+document.getElementById("reset").addEventListener("click", () => {
+  clearInterval(interval); interval = null; seconds = 25 * 60; draw();
+});
+</script>
+</body>
+</html>
